@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Njangi Manager</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#F4F7F3;--card:#fff;--ink:#12261C;--mute:#5E7266;--line:#D9E2DB;--brand:#14452F;--on:#fff;--gold:#F2B531;--gold-ink:#3A2A00;--bad:#B3261E;--ok:#1E7A46}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1A14;--card:#17261D;--ink:#EAF2EC;--mute:#9DB1A3;--line:#284234;--brand:#3FA070;--on:#07140D;--bad:#FF8A80;--ok:#6FD39B}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Bricolage Grotesque",system-ui,sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:0;font-weight:800}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.pot{background:var(--brand);color:var(--on);border-radius:18px;padding:18px;margin-bottom:14px}
+.pot .who{font-size:30px;font-weight:800;line-height:1.1;margin:4px 0}
+.amt{display:inline-block;background:var(--gold);color:var(--gold-ink);font-weight:800;border-radius:8px;padding:2px 10px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.n{flex:1;min-width:0}.n b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mut{color:var(--mute);font-size:13px}
+.chk{width:44px;height:44px;border-radius:12px;font-size:20px;font-weight:800}
+.chk.on{background:var(--ok);color:var(--on);border-color:var(--ok)}
+.tag{font-size:12px;background:var(--bad);color:var(--on);border:0;border-radius:6px;padding:1px 6px}
+.p{background:var(--brand);color:var(--on);border-color:var(--brand);font-weight:600;width:100%}
+.g{display:grid;gap:8px;margin-top:8px}
+a{color:var(--brand)}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+<script>
+// 1) Paste your Supabase values here (Project Settings > API). The anon key is safe to expose; the security rules in schema.sql protect the data.
+const SB_URL='https://kgkoledisvohtomlezvd.supabase.co/rest/v1/', SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtna29sZWRpc3ZvaHRvbWxlenZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NzQwMjcsImV4cCI6MjEwNzE1MDAyN30.CUdmJlw715XH66EdIX2XfWbtUIFvBFRsUH9AeXO5bZ8';
+var sb=null;
+try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(x){document.getElementById('app').innerHTML='<div style="padding:16px"><b>Setup error</b><p>'+x.message+'</p><p>Check that SB_URL starts with https:// and that both values are pasted at the top of the script.</p></div>'}
+let L='fr',user=null,G=null,M=[],P=[],cur=function(){};
+const T={fr:{email:'Email',pw:'Mot de passe (6+)',in:'Se connecter',up:'Créer un compte',out:'Sortir',mine:'Mes groupes',name:'Nom du groupe',amt:'Cotisation (XAF)',new:'Créer le groupe',back:'← Groupes',round:'Tour',gets:'Reçoit',coll:'Collecté',mem:'Membres',add:'Ajouter',nm:'Nom',next:'Tour suivant',link:'Lien pour les membres (lecture seule)',share:'Envoyer sur WhatsApp',rem:'Relancer',late:'retard',paid:'Payé jusqu\'au',none:'Aucun bénéficiaire',chk:'Vérifiez votre email puis connectez-vous.'},
+en:{email:'Email',pw:'Password (6+)',in:'Log in',up:'Create account',out:'Log out',mine:'My groups',name:'Group name',amt:'Contribution (XAF)',new:'Create group',back:'← Groups',round:'Round',gets:'Receives',coll:'Collected',mem:'Members',add:'Add',nm:'Name',next:'Next round',link:'Member link (read-only)',share:'Send on WhatsApp',rem:'Remind',late:'late',paid:'Paid until',none:'No beneficiary',chk:'Check your email, then log in.'}};
+const t=k=>T[L][k]||k;
+const e=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const m=n=>Number(n||0).toLocaleString('fr-FR')+' XAF';
+const $=id=>document.getElementById(id);
+const wa=(n,x)=>'https://wa.me/'+(n?String(n).replace(/\D/g,''):'')+'?text='+encodeURIComponent(x);
+function R(h){$('app').innerHTML='<div class="top"><h1>Njangi</h1><span><button onclick="lang()">'+(L=='fr'?'EN':'FR')+'</button>'+(user?' <button onclick="sb.auth.signOut()">'+t('out')+'</button>':'')+'</span></div>'+h}
+function lang(){L=L=='fr'?'en':'fr';cur()}
+function pot(name,round,mem,amount,paidN){var n=mem.length,b=n?mem[(round-1)%n]:null;
+ return '<div class="pot"><small>'+e(name)+' · '+t('round')+' '+round+(n?'/'+n:'')+' · '+t('gets')+'</small><div class="who">'+(b?e(b.name):t('none'))+'</div><span class="amt">'+m(amount*n)+'</span><div style="margin-top:8px"><small>'+t('coll')+': '+m(amount*paidN)+' ('+paidN+'/'+n+')</small></div></div>'}
+
+// AUTH
+function authV(msg){cur=function(){authV(msg)};
+ R('<div class="box"><div class="g"><input id="em" type="email" placeholder="'+t('email')+'"><input id="pw" type="password" placeholder="'+t('pw')+'"><button class="p" onclick="login()">'+t('in')+'</button><button onclick="signup()">'+t('up')+'</button></div><p class="mut">'+e(msg||'')+'</p></div>')}
+async function login(){var r=await sb.auth.signInWithPassword({email:$('em').value,password:$('pw').value});if(r.error)authV(r.error.message)}
+async function signup(){var r=await sb.auth.signUp({email:$('em').value,password:$('pw').value});if(r.error)authV(r.error.message);else if(!r.data.session)authV(t('chk'))}
+
+// GROUP LIST
+async function listV(){cur=listV;
+ var g=await sb.from('groups').select('*').order('created_at'),a=await sb.from('accounts').select('paid_until').maybeSingle();
+ var h='<p class="mut">'+(a.data?t('paid')+' '+e(a.data.paid_until):'')+'</p><div class="box"><b>'+t('mine')+'</b>';
+ (g.data||[]).forEach(function(x){h+='<div class="row"><div class="n"><b>'+e(x.name)+'</b><span class="mut">'+m(x.amount)+' · '+t('round')+' '+x.round+'</span></div><button onclick="gV(\''+x.id+'\')">→</button></div>'});
+ h+='<div class="g"><input id="gn" placeholder="'+t('name')+'"><input id="ga" inputmode="numeric" placeholder="'+t('amt')+'"><button class="p" onclick="mk()">'+t('new')+'</button></div></div>';R(h)}
+async function mk(){var n=$('gn').value.trim();if(!n)return;await sb.from('groups').insert({name:n,amount:+$('ga').value||0});listV()}
+
+// GROUP DETAIL
+async function gV(id){cur=function(){gV(id)};
+ var r=await Promise.all([sb.from('groups').select('*').eq('id',id).single(),sb.from('members').select('*').eq('group_id',id).order('position'),sb.from('payments').select('member_id,round').eq('group_id',id)]);
+ G=r[0].data;M=r[1].data||[];P=r[2].data||[];
+ var paid=function(x,rd){return P.some(function(p){return p.member_id==x.id&&p.round==rd})},pc=M.filter(function(x){return paid(x,G.round)}).length;
+ var link=location.origin+location.pathname+'?v='+G.share_token;
+ var h='<button onclick="listV()">'+t('back')+'</button><div style="height:10px"></div>'+pot(G.name,G.round,M,G.amount,pc)+'<div class="box"><b>'+t('mem')+'</b>';
+ M.forEach(function(x,i){var ok=paid(x,G.round),late=(G.round-1)-P.filter(function(p){return p.member_id==x.id&&p.round<G.round}).length;
+  h+='<div class="row"><button class="chk'+(ok?' on':'')+'" onclick="tog(\''+x.id+'\','+ok+')">'+(ok?'✓':'')+'</button><div class="n"><b>'+e(x.name)+(i==(G.round-1)%M.length?' ★':'')+'</b><span class="mut">#'+(i+1)+(x.phone?' · '+e(x.phone):'')+'</span></div>'+(late>0?'<span class="tag">'+late+' '+t('late')+'</span>':'')+(!ok&&x.phone?'<a target="_blank" rel="noopener" href="'+wa(x.phone,(L=='fr'?'Bonjour '+x.name+', rappel: cotisation de '+m(G.amount)+' pour le tour '+G.round+' ('+G.name+'). Merci !':'Hi '+x.name+', reminder: '+m(G.amount)+' for round '+G.round+' ('+G.name+'). Thanks!'))+'">'+t('rem')+'</a>':'')+'<button onclick="rm(\''+x.id+'\')">×</button></div>'});
+ h+='<div class="g"><input id="nm" placeholder="'+t('nm')+'"><input id="ph" inputmode="tel" placeholder="2376..."><button class="p" onclick="add()">'+t('add')+'</button></div></div>';
+ h+='<div class="box"><b>'+t('link')+'</b><p class="mut" style="word-break:break-all">'+e(link)+'</p><a href="'+wa('',link)+'" target="_blank" rel="noopener">'+t('share')+'</a></div><button class="p" onclick="nxt()">'+t('next')+'</button>';R(h)}
+async function tog(mid,ok){if(ok)await sb.from('payments').delete().eq('member_id',mid).eq('round',G.round);else await sb.from('payments').insert({group_id:G.id,member_id:mid,round:G.round});gV(G.id)}
+async function add(){var n=$('nm').value.trim();if(!n)return;await sb.from('members').insert({group_id:G.id,name:n,phone:$('ph').value.trim(),position:M.length+1});gV(G.id)}
+async function rm(id){await sb.from('members').delete().eq('id',id);gV(G.id)}
+async function nxt(){await sb.from('groups').update({round:G.round+1}).eq('id',G.id);gV(G.id)}
+
+// MEMBER VIEW (read-only, via ?v=token)
+async function viewV(tk){cur=function(){viewV(tk)};
+ var r=await sb.rpc('group_view',{t:tk});if(!r.data){R('<p>—</p>');return}
+ var d=r.data,mem=d.members||[],pc=mem.filter(function(x){return x.paid}).length;
+ var h=pot(d.name,d.round,mem,d.amount,pc)+'<div class="box">';
+ mem.forEach(function(x,i){h+='<div class="row"><span class="chk'+(x.paid?' on':'')+'" style="display:grid;place-items:center;border:1px solid var(--line)">'+(x.paid?'✓':'')+'</span><div class="n"><b>'+e(x.name)+'</b></div>'+(x.late>0?'<span class="tag">'+x.late+' '+t('late')+'</span>':'')+'</div>'});
+ R(h+'</div>')}
+
+// START
+var q=new URLSearchParams(location.search).get('v');
+if(!sb){}else if(q)viewV(q);else{sb.auth.onAuthStateChange(function(_ev,s){user=s?s.user:null;user?listV():authV()});sb.auth.getSession().then(function(r){if(!r.data.session)authV()})}
+</script>
+</body>
+</html>
