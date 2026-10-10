@@ -37,7 +37,7 @@ a{color:var(--brand)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 <script>
 // 1) Paste your Supabase values here (Project Settings > API). The anon key is safe to expose; the security rules in schema.sql protect the data.
-const SB_URL='https://kgkoledisvohtomlezvd.supabase.co/rest/v1/', SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtna29sZWRpc3ZvaHRvbWxlenZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NzQwMjcsImV4cCI6MjEwNzE1MDAyN30.CUdmJlw715XH66EdIX2XfWbtUIFvBFRsUH9AeXO5bZ8';
+const SB_URL='https://kgkoledisvohtomlezvd.supabase.co', SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtna29sZWRpc3ZvaHRvbWxlenZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NzQwMjcsImV4cCI6MjEwNzE1MDAyN30.CUdmJlw715XH66EdIX2XfWbtUIFvBFRsUH9AeXO5bZ8';
 var sb=null;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(x){document.getElementById('app').innerHTML='<div style="padding:16px"><b>Setup error</b><p>'+x.message+'</p><p>Check that SB_URL starts with https:// and that both values are pasted at the top of the script.</p></div>'}
 let L='fr',user=null,G=null,M=[],P=[],cur=function(){};
